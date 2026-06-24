@@ -1,4 +1,4 @@
-r'''# Architectural Ablation & Regularization Study on CIFAR-10 (Low-Data Regime)
+# Architectural Ablation & Regularization Study on CIFAR-10 (Low-Data Regime)
 
 A controlled deep learning experiment examining how Batch Normalization, Spatial Dropout, Data Augmentation, and L2 Regularization interact when training CNNs on severely limited data (5,000 samples -- 10% of CIFAR-10).
 
