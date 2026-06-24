@@ -1,4 +1,4 @@
-# Architectural Ablation & Regularization Study on CIFAR-10 (Low-Data Regime)
+r'''# Architectural Ablation & Regularization Study on CIFAR-10 (Low-Data Regime)
 
 A controlled deep learning experiment examining how Batch Normalization, Spatial Dropout, Data Augmentation, and L2 Regularization interact when training CNNs on severely limited data (5,000 samples -- 10% of CIFAR-10).
 
@@ -44,7 +44,7 @@ pip install -r requirements.txt
 python experiments.py
 
 # Generate additional plots
-python generate_plots.py
+python plots.py
 
 # Results will be saved to:
 #   ./results/results.json          # Raw metrics
@@ -62,7 +62,7 @@ python generate_plots.py
 ├── data.py                # CIFAR-10 data loading with strict isolation
 ├── models.py              # 6 model variants with modular regularization
 ├── experiments.py         # Training loop, evaluation, plotting
-├── generate_plots.py      # Additional publication-quality figures
+├── plots.py               # Additional publication-quality figures
 ├── results/
 │   ├── figures/           # Generated plots
 │   ├── results.json       # Numerical results
@@ -79,7 +79,7 @@ python generate_plots.py
 | `data.py` | Loads CIFAR-10, normalizes, splits 5K train / 1K val / 1K test, one-hot encodes labels |
 | `models.py` | Defines 6 model variants via `VARIENTS` dict; builds CNN with toggled BN/Dropout/Aug/L2 |
 | `experiments.py` | Orchestrates training, early stopping, evaluation, generates 5 standard plots |
-| `generate_plots.py` | Generates 4 additional publication-quality figures from results.json |
+| `plots.py` | Generates 4 additional publication-quality figures from results.json |
 
 ---
 
@@ -160,18 +160,18 @@ Input (32x32x3)
 5. **M1_Baseline** -- 54.2% (Unregularized, rapid overfit)
 6. **M6_Heavy_Reg** -- 54.6% (Over-regularization destroyed capacity)
 
+---
+
+## Key Findings
+
 ### The Regularization Spectrum
 
-![Regularization Spectrum](results/figures/regularization_spectrum.png)
+![Regularization Spectrum](Results/figures/regularization_spectrum.png)
 
 This diagram maps all 6 variants along the overfitting-underfitting axis. The green diamond shows test accuracy:
 - **M1/M2** (red): Severe overfitting, poor test accuracy
 - **M4** (yellow-green): Balanced gap, highest test accuracy
 - **V5/M6** (purple): Underfitting/collapse, test accuracy drops
-
----
-
-## Key Findings
 
 ### 1. BatchNorm Alone Accelerates Overfitting on Small Data
 
@@ -202,57 +202,31 @@ M6 applies heavy dropout (0.5), strong L2 (1e-3), and augmentation simultaneousl
 
 ## Visualizations
 
-All plots are auto-generated. `experiments.py` produces 5 standard plots; `generate_plots.py` produces 4 additional publication-quality figures.
+All plots are auto-generated. `experiments.py` produces 5 standard plots; `plots.py` produces 4 additional publication-quality figures.
 
-### From experiments.py (standard plots)
+### From experiments.py
 
-#### Validation Accuracy Curves
-
-![Validation Accuracy Curves](results/figures/val_accuracy_curves.png)
-
-**What it shows**: Validation accuracy over training epochs for all 6 variants. M4 maintains the highest sustained validation accuracy.
-
-#### Test Accuracy Bars
-
-![Test Accuracy Bars](results/figures/test_accuracy_bars.png)
+![Test Accuracy Bars](Results/figures/test_accuracy_bars.png)
 
 **What it shows**: Final test accuracy comparison. M4 (BN + Dropouts) achieves 70.5%, while M6 collapses to 54.6%.
 
-#### Generalization Gap
-
-![Generalization Gap](results/figures/generalization_gap.png)
-
-**What it shows**: Train Acc - Val Acc per epoch. Positive values indicate overfitting. M1/M2 show severe divergence; M4 stays near zero.
-
-#### Train vs Validation Loss Grid
-
-![Train Val Loss Grid](results/figures/train_val_loss_grid.png)
-
-**What it shows**: Per-variant train/val loss subplots. M1 diverges rapidly; M4 maintains tight coupling.
-
-#### Overfit Gap Bars
-
-![Overfit Gap Bars](results/figures/overfit_gap_bars.png)
-
-**What it shows**: Final overfit gap by variant. Lower = better generalization. M4 has the smallest positive gap.
-
-### From generate_plots.py (additional publication figures)
+### From plots.py
 
 #### Convergence Comparison
 
-![Convergence Comparison](results/figures/convergence_comparison.png)
+![Convergence Comparison](Results/figures/convergence_comparison.png)
 
 **What it shows**: Validation accuracy convergence curves with annotations. M4 peaks at ~70%; M2 plateaus at ~66%; M6 never breaks 60%.
 
-#### Train vs Validation (Attractive)
+#### Train vs Validation
 
-![Train vs Val](results/figures/train_vs_val.png)
+![Train vs Val](Results/figures/train_vs_val.png)
 
 **What it shows**: Side-by-side train/val accuracy bars. M1/M2 show massive divergence (memorization). M4 shows tight coupling (good generalization). M6 shows train < val (collapse).
 
 #### Full Trajectories
 
-![Trajectories](results/figures/trajectories.png)
+![Trajectories](Results/figures/trajectories.png)
 
 **What it shows**: Full 6-panel grid of training vs validation curves. M1 overfits by epoch 31. M2 converges instantly but plateaus. M3 is slow but steady. M4 balances speed and stability. V5 is delayed by augmentation noise. M6 never learns.
 
@@ -352,7 +326,7 @@ Done. Results saved to ./results/
 ### Step 4: Generate Additional Plots
 
 ```bash
-python generate_plots.py
+python plots.py
 ```
 
 ### Step 5: View Results
@@ -430,3 +404,10 @@ MIT License -- free for academic and commercial use. Please cite if used in publ
 ---
 
 *Generated from controlled experiments with fixed seed 42. All metrics are reproducible.*
+'''
+
+with open('/mnt/agents/output/README.md', 'w') as f:
+    f.write(readme_final)
+
+print("README.md updated with 4 images only!")
+print(f"Lines: {len(readme_final.split(chr(10)))}")
