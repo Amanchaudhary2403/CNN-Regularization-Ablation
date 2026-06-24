@@ -1,0 +1,50 @@
+{
+  "M1_Baseline": {
+    "test_loss": 1.4879,
+    "test_accuracy": 0.542,
+    "epochs_trained": 31,
+    "best_val_accuracy": 0.563,
+    "final_train_accuracy": 0.9824,
+    "overfit_gap": 0.4194
+  },
+  "M2_BN_Only": {
+    "test_loss": 1.3388,
+    "test_accuracy": 0.669,
+    "epochs_trained": 100,
+    "best_val_accuracy": 0.659,
+    "final_train_accuracy": 1.0,
+    "overfit_gap": 0.341
+  },
+  "M3_Dropout_Only": {
+    "test_loss": 1.3102,
+    "test_accuracy": 0.643,
+    "epochs_trained": 88,
+    "best_val_accuracy": 0.643,
+    "final_train_accuracy": 0.8134,
+    "overfit_gap": 0.1704
+  },
+  "M4_BN_Dropouts": {
+    "test_loss": 1.2258,
+    "test_accuracy": 0.705,
+    "epochs_trained": 100,
+    "best_val_accuracy": 0.699,
+    "final_train_accuracy": 0.8202,
+    "overfit_gap": 0.1212
+  },
+  "V5_BN_Dropout_Aug": {
+    "test_loss": 1.2587,
+    "test_accuracy": 0.687,
+    "epochs_trained": 94,
+    "best_val_accuracy": 0.682,
+    "final_train_accuracy": 0.6782,
+    "overfit_gap": -0.0038
+  },
+  "M6_Heavy_Reg": {
+    "test_loss": 1.8165,
+    "test_accuracy": 0.386,
+    "epochs_trained": 100,
+    "best_val_accuracy": 0.413,
+    "final_train_accuracy": 0.3204,
+    "overfit_gap": -0.0926
+  }
+}
