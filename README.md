@@ -15,23 +15,6 @@
 <br>
 
 </div>
-<div align="center">
-
-# 🧪 Regularization Under Pressure
-## What happens when you train a CNN on only 5,000 images?
-
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
-![Dataset](https://img.shields.io/badge/CIFAR--10-5K%20samples-2ECC71?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Reproducible-blue?style=for-the-badge)
-
-<br>
-
-> *"Adding more regularization doesn't always help — sometimes it actively destroys the model."*
-
-<br>
-
-</div>
 
 ---
 
