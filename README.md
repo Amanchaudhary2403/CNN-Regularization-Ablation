@@ -1,26 +1,6 @@
 <div align="center">
-```
- _____  ______ _____ _    _ _               _____  _____ ______      _______ 
-|  __ \|  ____/ ____| |  | | |        /\   |  __ \|_   _|___  /   /\|__   __|
-| |__) | |__ | |  __| |  | | |       /  \  | |__) | | |    / /   /  \  | |   
-|  _  /|  __|| | |_ | |  | | |      / /\ \ |  _  /  | |   / /   / /\ \ | |   
-| | \ \| |___| |__| | |__| | |____ / ____ \| | \ \ _| |_ / /__ / ____ \| |   
-|_|  \_\______\_____|\_____/|______/_/    \_\_|  \_\_____/_____/_/    \_\_|   
-```
- 
-```
- _   _ _  _ ___  ___ ___ 
-| | | | \| |   \| __| _ \
-| |_| | .` | |) | _||   /
- \___/|_|\_|___/|___|_|_\
-```
- 
-```
- ___ ___ ___ ___ ___ _   _ ___ ___ 
-| _ \ _ \ __/ __/ __| | | | _ \ __|
-|  _/   / _|\__ \__ \ |_| |   / _| 
-|_| |_|_\___|___/___/\___/|_|_\___|
-```
+<h1> CNN Regularization Ablation Study</h1>
+<h3>How much can a CNN learn from 5,000 images — and when does regularization start killing it?</h3>
  
 <br>
 <img src="https://img.shields.io/badge/Python-3.10+-00FF41?style=for-the-badge&logo=python&logoColor=black" alt="Python"/>
@@ -30,15 +10,18 @@
 <img src="https://img.shields.io/badge/Status-REPRODUCED-00FF41?style=for-the-badge&logoColor=black" alt="Status"/>
 <br><br>
  
-<em><strong>// SYS.LOG:</strong> "More regularization doesn't always help. Sometimes it actively destroys the model."</em>
+> *A controlled CNN ablation study on CIFAR-10 with only 5,000 training samples —*
+> *isolating the individual and combined effects of BatchNorm, Spatial Dropout,*
+> *Data Augmentation, and L2 Regularization in a severely data-constrained regime.*
  
-<br>
-| `PROTOCOL` | `ARCHITECTURE` | `OPTIMIZER` | `SEED` |
-|:---:|:---:|:---:|:---:|
-| Controlled Ablation | 4-Block CNN | Adam + CosineDecay | 42 |
- 
-</div>
+---
 
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  KEY FINDING:  The best model (M4) using strict augmentation.      │
+│  The worst (M6) used ALL regularization techniques simultaneously. │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -286,11 +269,11 @@ Six-panel loss grid. M1 shows classic train-loss descent with flat val-loss — 
 ```
 cifar10-lowdata-ablation/
 │
-├── Config.py            # All hyperparameters in one place
-├── data.py              # Strict CIFAR-10 split loading (no leakage)
-├── models.py            # 6 model variants, modular regularization toggles
-├── experiments.py       # Training orchestration + 5 standard plots
-├── plots.py             # 4 additional publication-quality figures
+├── results/
+│    ├── Config.py            # All hyperparameters in one place
+│    ├── data.py              # Strict CIFAR-10 split loading (no leakage)
+│    ├── models.py            # 6 model variants, modular regularization toggles
+│    ├── experiments.py       # Training orchestration + 5 standard plots
 │
 ├── results/
 │   ├── results.json     # All numerical metrics
