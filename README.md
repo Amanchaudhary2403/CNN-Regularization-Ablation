@@ -1,29 +1,45 @@
 <div align="center">
-
-# 🧪 Regularization Under Pressure
-## What happens when you train a CNN on only 5,000 images?
-
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
-![Dataset](https://img.shields.io/badge/CIFAR--10-5K%20samples-2ECC71?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Reproducible-blue?style=for-the-badge)
-
+```
+██████╗ ███████╗ ██████╗ ██╗   ██╗██╗      █████╗ ██████╗ ██╗███████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗
+██╔══██╗██╔════╝██╔════╝ ██║   ██║██║     ██╔══██╗██╔══██╗██║╚══███╔╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║
+██████╔╝█████╗  ██║  ███╗██║   ██║██║     ███████║██████╔╝██║  ███╔╝ ███████║   ██║   ██║██║   ██║██╔██╗ ██║
+██╔══██╗██╔══╝  ██║   ██║██║   ██║██║     ██╔══██║██╔══██╗██║ ███╔╝  ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║
+██║  ██║███████╗╚██████╔╝╚██████╔╝███████╗██║  ██║██║  ██║██║███████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║
+╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+                                                                         U N D E R   P R E S S U R E
+```
+ 
+### `[ CIFAR-10 · LOW-DATA REGIME · CNN ABLATION STUDY ]`
+ 
 <br>
-
-> *"Adding more regularization doesn't always help — sometimes it actively destroys the model."*
-
+![Python](https://img.shields.io/badge/Python-3.10+-00FF41?style=for-the-badge&logo=python&logoColor=black)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-00FFFF?style=for-the-badge&logo=tensorflow&logoColor=black)
+![Dataset](https://img.shields.io/badge/CIFAR--10-5K%20samples-BF00FF?style=for-the-badge&logoColor=white)
+![Variants](https://img.shields.io/badge/Variants-6%20Models-FF0080?style=for-the-badge&logoColor=white)
+![Status](https://img.shields.io/badge/Status-REPRODUCED-00FF41?style=for-the-badge&logoColor=black)
+ 
 <br>
-
+```
+╔══════════════════════════════════════════════════════════════════════╗
+║  "More regularization doesn't always help.                          ║
+║   Sometimes it actively destroys the model."                        ║
+╚══════════════════════════════════════════════════════════════════════╝
+```
+ 
+<br>
+| `PROTOCOL` | `ARCHITECTURE` | `OPTIMIZER` | `SEED` |
+|:---:|:---:|:---:|:---:|
+| Controlled Ablation | 4-Block CNN | Adam + CosineDecay | 42 |
+ 
 </div>
-
 ---
-
-## 🔍 The Question
-
+ 
+## ◈ SYSTEM INIT — The Question
+ 
 Can BatchNorm, Dropout, Data Augmentation, and L2 Regularization — individually and combined — actually **improve generalization** when you're severely data-constrained?
-
+ 
 We trained **6 controlled CNN variants** on just 5,000 CIFAR-10 images (10% of the full dataset) to find out. Each variant isolates one or more regularization choices while holding the base architecture constant. The results are surprising.
-
+ 
 ---
 
 ## ⚙️ Experimental Protocol
