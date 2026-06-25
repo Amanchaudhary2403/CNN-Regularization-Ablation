@@ -129,7 +129,7 @@ UNDER-REGULARIZED ←———————————————————�
 
 How each variant's validation accuracy evolves epoch-by-epoch. M4 (purple) climbs highest and most stably; M6 (teal) barely learns; M1 (red) plateaus early after overfitting.
 
-![Validation Accuracy Curves](val_accuracy_curves.png)
+![Validation Accuracy Curves](results/figures/val_accuracy_curves.png)
 
 ---
 
@@ -174,7 +174,7 @@ Each constraint reduces capacity. When constraints compound, you don't get a mor
 
 Tracks how the Train − Val accuracy gap evolves per epoch. M1 and M2 blow up above 0.4. M4 stabilises near 0.12. V5 and M6 dip below zero — the hallmark of capacity collapse, not generalisation.
 
-![Generalisation Gap](generalization_gap.png)
+![Generalisation Gap](results/figures/generalization_gap.png)
 
 ---
 
@@ -217,7 +217,7 @@ R7  →  BatchNorm alone is not a regularizer — pair it with Dropout or L2 on 
 
 Six-panel loss grid. M1 shows classic train-loss descent with flat val-loss — hallmark overfitting. M4 shows both curves tracking together until smooth convergence. M6 shows both curves stuck high, confirming the model is not learning.
 
-![Train vs Validation Loss Grid](train_val_loss_grid.png)
+![Train vs Validation Loss Grid](results/figures/train_val_loss_grid.png)
 
 ---
 
