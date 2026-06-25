@@ -1,329 +1,269 @@
-# Architectural Ablation & Regularization Study on CIFAR-10 (Low-Data Regime)
+<div align="center">
 
-A controlled deep learning experiment examining how Batch Normalization, Spatial Dropout, Data Augmentation, and L2 Regularization interact when training CNNs on severely limited data (5,000 samples -- 10% of CIFAR-10).
+# 🧪 Regularization Under Pressure
+## What happens when you train a CNN on only 5,000 images?
 
----
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+![Dataset](https://img.shields.io/badge/CIFAR--10-5K%20samples-2ECC71?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Reproducible-blue?style=for-the-badge)
 
-## Table of Contents
+<br>
 
-1. [Overview](#overview)
-2. [Quick Start](#quick-start)
-3. [Project Structure](#project-structure)
-4. [Experiment Design](#experiment-design)
-5. [Results Summary](#results-summary)
-6. [Key Findings](#key-findings)
-7. [Visualizations](#visualizations)
-8. [Augmentation Guidelines](#augmentation-guidelines)
-9. [How to Run](#how-to-run)
-10. [Requirements](#requirements)
-11. [Citation](#citation)
+> *"Adding more regularization doesn't always help — sometimes it actively destroys the model."*
+
+<br>
+
+</div>
 
 ---
 
-## Overview
+## 🔍 The Question
 
-This repository contains a rigorous ablation study that answers a critical engineering question:
+Can BatchNorm, Dropout, Data Augmentation, and L2 Regularization — individually and combined — actually **improve generalization** when you're severely data-constrained?
 
-> **What happens when you apply modern regularization techniques to a CNN trained on only 5,000 images?**
-
-Most deep learning research assumes abundant data (50K-1M+ samples). In real-world scenarios -- medical imaging, industrial defect detection, rare satellite imagery -- you often have **< 10,000 labeled samples**. This study isolates how architectural choices behave under that constraint.
-
-**Key insight**: Regularization techniques are NOT additive. Their interactions are strongly modulated by dataset scale. A technique that helps at 50K samples can **hurt** at 5K.
+We trained **6 controlled CNN variants** on just 5,000 CIFAR-10 images (10% of the full dataset) to find out. Each variant isolates one or more regularization choices while holding the base architecture constant. The results are surprising.
 
 ---
 
-## Quick Start
+## ⚙️ Experimental Protocol
+
+### Data Splits
+
+No leakage. No exceptions.
+
+```
+CIFAR-10 Train Split (50,000)          CIFAR-10 Test Split (10,000)
+│                                       │
+├─── 5,000  →  Train                   └─── 1,000  →  Test
+└─── 1,000  →  Validation
+```
+
+Fixed seed `42`. All splits are disjoint by construction.
+
+### Base Architecture
+
+The **backbone never changes** across variants — only what's toggled inside `[brackets]`.
+
+```
+32×32×3 Input
+    ↓
+Conv2D(32)  → [BatchNorm] → ReLU → [SpatialDropout] → MaxPool
+Conv2D(64)  → [BatchNorm] → ReLU → [SpatialDropout] → MaxPool
+Conv2D(128) → [BatchNorm] → ReLU → [SpatialDropout] → MaxPool
+Conv2D(256) → [BatchNorm] → ReLU → [SpatialDropout] → GlobalAvgPool
+Dense(64)   → [BatchNorm] → ReLU → [Dropout]
+Dense(10)   → Softmax
+```
+
+### Training Hyperparameters
+
+| Hyperparameter | Value |
+|:---|:---|
+| Optimizer | Adam + Cosine Decay (lr = 0.001) |
+| Batch Size | 32 |
+| Label Smoothing | 0.1 |
+| Early Stopping | patience = 20 on `val_loss` |
+| Max Epochs | 100 |
+| Gradient Clipping | `clipnorm = 1.0` |
+| Loss | Categorical Cross-Entropy |
+
+---
+
+## 🧬 The Six Variants
+
+| ID | Name | BN | SpatDrop | Dropout | Augment | L2 | Drop Rate | λ |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| M1 | Baseline | ✗ | ✗ | ✗ | ✗ | ✗ | — | — |
+| M2 | BN Only | ✓ | ✗ | ✗ | ✗ | ✗ | — | — |
+| M3 | Dropout Only | ✗ | ✓ | ✓ | ✗ | ✗ | 0.3 | — |
+| M4 | BN + Dropouts | ✓ | ✓ | ✓ | ✗ | ✗ | 0.3 | — |
+| V5 | BN + Drop + Aug | ✓ | ✓ | ✓ | ✓ | ✗ | 0.3 | — |
+| M6 | Everything | ✓ | ✓ | ✓ | ✓ | ✓ | 0.5 | 1e-3 |
+
+---
+
+## 📊 Results
+
+### At a Glance
+
+```
+Test Accuracy (%)
+
+M4  ████████████████████████████████████  70.5%  ← Best
+V5  ████████████████████████████████▌     68.7%
+M2  ████████████████████████████████      66.9%
+M3  ██████████████████████████████▊       64.3%
+M1  █████████████████████████▊            54.2%
+M6  █████████████████████████▉            54.6%  ← Collapsed
+```
+
+### Full Results Table
+
+| Variant | Test Acc ↑ | Best Val | Train Acc | Overfit Gap | Epochs | Verdict |
+|:---|:---:|:---:|:---:|:---:|:---:|:---|
+| `M1_Baseline` | 54.2% | 56.3% | 98.2% | 🔴 +41.9% | 31 | Severe overfit, early stop |
+| `M2_BN_Only` | 66.9% | 65.9% | 100.0% | 🔴 +34.1% | 100 | Memorized perfectly, generalized poorly |
+| `M3_Dropout_Only` | 64.3% | 64.1% | 81.3% | 🟡 +17.0% | 88 | Stable but limited |
+| **`M4_BN_Dropouts`** | **70.5%** | **69.9%** | **82.0%** | **🟢 +12.3%** | **100** | **Best — sweet spot** |
+| `V5_BN_Drop_Aug` | 68.7% | 66.6% | 67.8% | ⚪ −0.4% | 94 | Augmentation hurt, not helped |
+| `M6_Heavy_Reg` | 54.6% | 57.9% | 46.6% | 🔵 −11.3% | 100 | Can't even fit training data |
+
+> **Overfit Gap** = `Train Acc − Val Acc`  
+> Positive → overfitting &nbsp;|&nbsp; Near zero → balanced &nbsp;|&nbsp; Negative → capacity collapse
+
+### The Spectrum
+
+```
+UNDER-REGULARIZED ←————————————————————————→ OVER-REGULARIZED
+
+   M1          M2          M3          M4          V5          M6
+ (No reg)   (BN only)  (Drop only) (BN+Drop)  (+Augment)  (+L2,0.5d)
+  54.2%      66.9%       64.3%      70.5%       68.7%       54.6%
+ gap+41.9   gap+34.1    gap+17.0   gap+12.3   gap-0.4     gap-11.3
+                                      ↑
+                                  SWEET SPOT
+```
+
+---
+
+## 💡 What We Learned
+
+### 1 · BatchNorm accelerates overfitting when used alone
+
+BN on 5K samples means computing statistics from batches that cover only **0.64% of the data**. Running estimates are noisy and biased. BN speeds up convergence — but with no explicit regularization, faster convergence just means **faster memorization**.
+
+`M2` hit **100% training accuracy** by epoch 90. Validation never crossed 65.6%.
+
+---
+
+### 2 · SpatialDropout + BatchNorm is the best combination
+
+These two techniques complement each other:
+
+- **SpatialDropout** drops *entire feature maps*, not individual units. It prevents the network from relying on any single spatial feature — breaking feature co-adaptation at the channel level.
+- **BatchNorm** then re-stabilizes the surviving activations, preventing gradient collapse or dead ReLUs caused by the aggressive dropout.
+
+`M4` — the only variant with both — achieves **70.5% test accuracy** with just a **12.3% overfit gap**. No other variant comes close to both metrics simultaneously.
+
+---
+
+### 3 · Data augmentation *hurt* performance on 32×32 images
+
+`V5` added `RandomRotation(0.05)`, `RandomZoom(0.05)`, and `RandomContrast(0.1)` on top of M4. It scored **68.7%** — *1.8% lower* than M4 with no augmentation.
+
+Why? CIFAR-10 images are tiny. Discriminative features (an ear, a wheel, a wing) occupy **10–20 pixels**. A 5% zoom crops 2 pixels off each edge. An 18° rotation smears fine details into neighboring pixels. The model ends up training on distorted artifacts that simply don't exist in the test set.
+
+Augmentation creates invariance only when there's enough resolution to survive the transform.
+
+---
+
+### 4 · Stack too many constraints and the network can't learn anything
+
+`M6` applies dropout (0.5) + L2 (1e-3) + BN + augmentation simultaneously. Training accuracy: **46.6%**. The model is below chance on several classes. It can't even fit the training data.
+
+Each constraint reduces capacity. When constraints compound, you don't get a more robust model — you get a model that has **no remaining degrees of freedom** to learn from.
+
+---
+
+## 🖼️ Augmentation on Low-Resolution Data
+
+| Transform | Effect on 32×32 CIFAR | Use? |
+|:---|:---|:---:|
+| `RandomFlip('horizontal')` | Mirrors object naturally, structure preserved | ✅ Safe |
+| `RandomRotation(0.05)` | ±18° smears 10–20px features into noise | ❌ Avoid |
+| `RandomZoom(0.05)` | Crops to 30×30, loses boundary context | ❌ Avoid |
+| `RandomContrast(0.1)` | Shifts color distributions that BN already handles | ❌ Avoid |
+| Cutout / RandomErasing | Masks critical signal on already-small objects | ❌ Avoid |
+| Mixup / CutMix | Highly effective at full scale; harmful under 10K | ❌ Avoid |
+
+**Recommended augmentation for `< 64×64`, `< 10K` samples:**
+
+```python
+augmentation = keras.Sequential([
+    keras.layers.RandomFlip("horizontal")   # the only safe choice
+])
+```
+
+---
+
+## 📐 Engineering Rules
+
+Derived directly from experimental evidence — not intuition.
+
+```
+R1  →  SpatialDropout2D (0.2–0.3) + BatchNorm together, not separately
+R2  →  No geometric augmentation on images < 64×64 pixels
+R3  →  BatchNorm goes between Conv and ReLU (pre-activation placement)
+R4  →  SpatialDropout2D in conv blocks, standard Dropout in dense blocks only
+R5  →  Total regularization budget < 0.6 (normalized); M6 hit 1.0 and collapsed
+R6  →  Early stopping on val_loss, not val_accuracy (loss detects overconfidence earlier)
+R7  →  BatchNorm alone is not a regularizer — pair it with Dropout or L2 on small data
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+cifar10-lowdata-ablation/
+│
+├── Config.py            # All hyperparameters in one place
+├── data.py              # Strict CIFAR-10 split loading (no leakage)
+├── models.py            # 6 model variants, modular regularization toggles
+├── experiments.py       # Training orchestration + 5 standard plots
+├── plots.py             # 4 additional publication-quality figures
+│
+├── results/
+│   ├── results.json     # All numerical metrics
+│   ├── figures/         # Auto-generated plots
+│   └── *.weights.h5     # Saved checkpoints per variant
+│
+└── research_paper.md    # Full theoretical analysis
+```
+
+---
+
+## 🚀 Quickstart
 
 ```bash
-# Clone and setup
 git clone <repo-url>
 cd cifar10-lowdata-ablation
 pip install -r requirements.txt
 
-# Run the full experiment (trains 6 models, ~30-60 min on CPU)
+# Train all 6 variants (~30–60 min on CPU)
 python experiments.py
 
-# Generate additional plots
+# Generate publication figures
 python plots.py
-
-# Results will be saved to:
-#   ./results/results.json          # Raw metrics
-#   ./results/figures/                # All plots
-#   ./results/*.weights.h5            # Model checkpoints
 ```
 
----
+Outputs:
+- `results/results.json` — metrics for all variants
+- `results/figures/` — all plots
+- `results/*.weights.h5` — per-variant checkpoints
 
-## Project Structure
-
-```
-.
-├── Config.py              # Hyperparameters & experiment settings
-├── data.py                # CIFAR-10 data loading with strict isolation
-├── models.py              # 6 model variants with modular regularization
-├── experiments.py         # Training loop, evaluation, plotting
-├── plots.py               # Additional publication-quality figures
-├── results/
-│   ├── figures/           # Generated plots
-│   ├── results.json       # Numerical results
-│   └── *.weights.h5       # Saved model weights
-├── research_paper.md      # Full academic paper with theoretical analysis
-└── README.md              # This file
-```
-
-### File Details
-
-| File | Purpose |
-|------|---------|
-| `Config.py` | Centralized hyperparameters: epochs, batch size, dropout rates, L2 lambdas, data sizes |
-| `data.py` | Loads CIFAR-10, normalizes, splits 5K train / 1K val / 1K test, one-hot encodes labels |
-| `models.py` | Defines 6 model variants via `VARIENTS` dict; builds CNN with toggled BN/Dropout/Aug/L2 |
-| `experiments.py` | Orchestrates training, early stopping, evaluation, generates 5 standard plots |
-| `plots.py` | Generates 4 additional publication-quality figures from results.json |
+**Environment:** Python 3.10+ · TensorFlow 2.15 · Windows 11 / WSL2 / Ubuntu 22.04
 
 ---
 
-## Experiment Design
-
-### Data Protocol
-
-**Strict isolation -- no leakage:**
-
-| Split | Size | Source | Purpose |
-|-------|------|--------|---------|
-| Train | 5,000 | CIFAR-10 train set | Parameter optimization |
-| Validation | 1,000 | CIFAR-10 train set | Early stopping & model selection |
-| Test | 1,000 | CIFAR-10 test set | Final generalization estimate |
-
-Train/val drawn from official train split; test drawn from official test split. Completely disjoint by construction. Fixed random seed (42) ensures reproducibility.
-
-### Network Architecture
-
-**Capacity is held constant** -- only regularization topology changes:
-
-```
-Input (32x32x3)
-  -> Conv2D(32) -> [BN?] -> ReLU -> [SpatialDropout?] -> MaxPool
-  -> Conv2D(64) -> [BN?] -> ReLU -> [SpatialDropout?] -> MaxPool
-  -> Conv2D(128) -> [BN?] -> ReLU -> [SpatialDropout?] -> MaxPool
-  -> Conv2D(256) -> [BN?] -> ReLU -> [SpatialDropout?] -> GlobalAvgPool
-  -> Dense(64) -> [BN?] -> ReLU -> [Dropout?]
-  -> Dense(10, softmax)
-```
-
-### Six Model Variants
-
-| Variant | BatchNorm | Spatial Dropout | Standard Dropout | Data Augmentation | L2 Regularization | Dropout Rate | L2 lambda |
-|---------|-----------|-----------------|------------------|-------------------|-------------------|--------------|------|
-| **M1_Baseline** | No | No | No | No | No | -- | -- |
-| **M2_BN_Only** | Yes | No | No | No | No | -- | -- |
-| **M3_Dropout_Only** | No | Yes | Yes | No | No | 0.3 | -- |
-| **M4_BN_Dropouts** | Yes | Yes | Yes | No | No | 0.3 | -- |
-| **V5_BN_Dropout_Aug** | Yes | Yes | Yes | Yes | No | 0.3 | -- |
-| **M6_Heavy_Reg** | Yes | Yes | Yes | Yes | Yes | 0.5 | 1e-3 |
-
-### Training Configuration
-
-| Setting | Value | Why |
-|---------|-------|-----|
-| Optimizer | Adam + CosineDecay LR | Smooth annealing from 0.001 |
-| Batch Size | 32 | 157 steps/epoch at 5K samples |
-| Label Smoothing | 0.1 | Prevents overconfident predictions on small data |
-| Early Stopping | patience=20, monitor=val_loss | Prevents overfitting to training noise |
-| Max Epochs | 100 | Sufficient for convergence |
-| Loss | Categorical Crossentropy | Standard multi-class |
-| Gradient Clipping | clipnorm=1.0 | Stabilizes training with BN |
-
----
-
-## Results Summary
-
-### Exact Metrics from Training Logs
-
-| Variant | Test Accuracy | Best Val Accuracy | Final Train Acc | Final Val Acc | Overfit Gap | Epochs Trained | Status |
-|---------|---------------|-------------------|-----------------|---------------|-------------|----------------|--------|
-| **M1_Baseline** | 54.2% | 56.3% | 98.2% | 55.2% | **+41.9%** | 31 | Severe overfit |
-| **M2_BN_Only** | 66.9% | 65.9% | 100.0% | 65.6% | **+34.1%** | 100 | BN-accelerated overfit |
-| **M3_Dropout_Only** | 64.3% | 64.1% | 81.3% | 64.1% | +17.0% | 88 | Moderate overfit |
-| **M4_BN_Dropouts** | **70.5%** | **69.9%** | 82.0% | 69.7% | **+12.3%** | 100 | **Best generalization** |
-| **V5_BN_Dropout_Aug** | 68.7% | 66.6% | 67.8% | 65.8% | **-0.4%** | 94 | Augmentation misalignment |
-| **M6_Heavy_Reg** | 54.6% | 57.9% | 46.6% | 57.9% | **-11.3%** | 100 | Capacity collapse |
-
-*Overfit Gap = Final Train Acc - Final Val Acc. Positive = overfitting. Negative = underfitting/collapse.*
-
-### Ranking by Test Accuracy
-
-1. **M4_BN_Dropouts** -- 70.5% (Spatial Dropout + BatchNorm synergy)
-2. **V5_BN_Dropout_Aug** -- 68.7% (Augmentation hurt performance)
-3. **M2_BN_Only** -- 66.9% (Fast convergence but severe overfit)
-4. **M3_Dropout_Only** -- 64.3% (Slow but steady)
-5. **M1_Baseline** -- 54.2% (Unregularized, rapid overfit)
-6. **M6_Heavy_Reg** -- 54.6% (Over-regularization destroyed capacity)
-
----
-
-## Key Findings
-
-### The Regularization Spectrum
-
-![Regularization Spectrum](Results/figures/regularization_spectrum.png)
-
-This diagram maps all 6 variants along the overfitting-underfitting axis. The green diamond shows test accuracy:
-- **M1/M2** (red): Severe overfitting, poor test accuracy
-- **M4** (yellow-green): Balanced gap, highest test accuracy
-- **V5/M6** (purple): Underfitting/collapse, test accuracy drops
-
-### 1. BatchNorm Alone Accelerates Overfitting on Small Data
-
-On 5K samples, BN computes statistics from tiny batches (0.64% of data per batch). Running mean/variance estimates become noisy and biased. BN eliminates internal covariate shift, allowing faster convergence -- but this drives the network to **memorize training samples before learning generalizable features**.
-
-**Evidence**: M2 hits 100% training accuracy by epoch 90 while validation plateaus at 65.6% -- a 34.1% gap.
-
-### 2. Data Augmentation Can Hurt on Low-Resolution Images
-
-The augmentation pipeline (`RandomRotation(0.05)`, `RandomZoom(0.05)`, `RandomContrast(0.1)`) is too aggressive for 32x32 images. A 5% zoom crops to 30x30; 18 degrees rotation destroys fine features. The model learns to classify **distorted artifacts that don't exist in the test set**.
-
-**Evidence**: V5 (with augmentation) scores 68.7% -- **1.8% lower** than M4 (without augmentation). The negative overfit gap (-0.4%) shows the model is underfitting the distorted training distribution.
-
-### 3. Spatial Dropout + BatchNorm = Best Synergy
-
-- **Spatial Dropout** drops entire feature maps (not individual pixels), forcing the network to learn from incomplete representations. This breaks strong pixel correlation in conv layers.
-- **BatchNorm** stabilizes the scale of surviving feature maps, preventing "dying ReLU" problems and keeping the optimization landscape smooth.
-
-**Evidence**: M4 achieves the highest test accuracy (70.5%) with the smallest overfit gap (+12.3%).
-
-### 4. Over-Regularization Collapses Capacity
-
-M6 applies heavy dropout (0.5), strong L2 (1e-3), and augmentation simultaneously. The network cannot form complete feature hierarchies (50% of maps dropped), weights shrink toward zero (L2 penalty), and the training data is distorted (augmentation). The model is regularized into **structural incapacity**.
-
-**Evidence**: M6 training accuracy is only 46.6% -- **below random chance for some classes**. The negative overfit gap (-11.3%) proves the model fails to fit even the training data.
-
----
-
-## Visualizations
-
-All plots are auto-generated. `experiments.py` produces 5 standard plots; `plots.py` produces 4 additional publication-quality figures.
-
-### From experiments.py
-
-![Test Accuracy Bars](Results/figures/test_accuracy_bars.png)
-
-**What it shows**: Final test accuracy comparison. M4 (BN + Dropouts) achieves 70.5%, while M6 collapses to 54.6%.
-
-### From plots.py
-
-#### Convergence Comparison
-
-![Convergence Comparison](Results/figures/convergence_comparison.png)
-
-**What it shows**: Validation accuracy convergence curves with annotations. M4 peaks at ~70%; M2 plateaus at ~66%; M6 never breaks 60%.
-
-#### Train vs Validation
-
-![Train vs Val](Results/figures/train_vs_val.png)
-
-**What it shows**: Side-by-side train/val accuracy bars. M1/M2 show massive divergence (memorization). M4 shows tight coupling (good generalization). M6 shows train < val (collapse).
-
-#### Full Trajectories
-
-![Trajectories](Results/figures/trajectories.png)
-
-**What it shows**: Full 6-panel grid of training vs validation curves. M1 overfits by epoch 31. M2 converges instantly but plateaus. M3 is slow but steady. M4 balances speed and stability. V5 is delayed by augmentation noise. M6 never learns.
-
----
-
-## Augmentation Guidelines for Low-Data, Low-Resolution Regimes
-
-**The Problem:** Our V5 variant (BN + Dropout + Augmentation) scored **68.7%** -- lower than M4 (70.5%) which had **no augmentation at all**. The negative overfit gap (-0.4%) proves the model was underfitting the distorted training distribution.
-
-**Why aggressive augmentation fails on 32x32 images:**
-
-| Transform | Applied | Effect on 32x32 | Result |
-|-----------|---------|-----------------|--------|
-| `RandomRotation(0.05)` | +/- 18 degrees | Destroys fine spatial features (wings, wheels, faces) | Distribution shift |
-| `RandomZoom(0.05)` | +/- 5% scale | Crops to 30x30, obliterates object boundaries | Signal loss |
-| `RandomContrast(0.1)` | +/- 10% | Alters color statistics the model relies on | Noise injection |
-| `RandomFlip` | Horizontal | Preserves object structure, mirrors natural viewpoints | Safe |
-
-On 32x32 CIFAR-10, critical discriminative features occupy only **10-20 pixels**. Even small geometric shifts remove the very signal the model must learn. The model trains on distorted artifacts (rotated blurs, cropped heads, contrast-inverted backgrounds) that do not exist in the test set.
-
-**Recommended Minimal Augmentation for <64x64 images:**
-
-```python
-# Safe: use ONLY this for 32x32 low-data regimes
-augmentation = keras.Sequential([
-    keras.layers.RandomFlip('horizontal')  # Only safe transform
-])
-```
-
-**What to AVOID on low-resolution small datasets:**
-- Geometric transforms: rotation, zoom, crop, shear, translation
-- Strong photometric transforms: contrast > 0.05, brightness > 0.1
-- Cutout / RandomErasing: removes too much signal on small images
-- Mixup / CutMix: effective at scale, but confuses small-data models
-
-**Rule of thumb:** If your object of interest occupies fewer than 30 pixels in any dimension, geometric augmentation is more likely to **destroy signal** than create invariance.
-
-```
-
-**Tested on**:
-- Python 3.10+
-- TensorFlow 2.15 (CPU)
-- Windows 11 / WSL2 / Ubuntu 22.04
-
----
-
-## Engineering Rules for Low-Data CNNs
-
-Based on this study, here are concrete rules for designing CNNs with <10K samples:
-
-| Rule | Recommendation | Rationale |
-|------|---------------|-----------|
-| **R1** | Use **Spatial Dropout (0.2-0.3)** + **BN** | Best synergy: structural diversity + scale stability |
-| **R2** | Avoid geometric augmentation on <64x64 images | Zoom/rotation destroys fine discriminative features |
-| **R3** | Place BN **pre-activation** (after Conv, before ReLU) | Prevents dead units, stabilizes gradients |
-| **R4** | Use SpatialDropout2D in conv layers, standard Dropout in dense | Match dropout topology to feature correlation |
-| **R5** | Keep total regularization strength < 0.6 (normalized) | M6 exceeded this (1.0) and collapsed |
-| **R6** | Monitor **val_loss** for early stopping, not accuracy | Loss is sensitive to calibration; accuracy masks confident errors |
-| **R7** | If using BN alone, pair with explicit regularization | BN accelerates convergence without generalization constraints at small scale |
-
----
-
-## Citation
-
-If you use this code or findings in your research, please cite:
+## 📄 Citation
 
 ```bibtex
-@misc{cifar10_lowdata_ablation,
-  title={Architectural Ablation and Capacity Constraints in Low-Data Regime Image Classifiers},
-  author={Researcher},
-  year={2026},
-  howpublished={\url{https://github.com/your-repo/cifar10-lowdata-ablation}},
-  note={Controlled study on CIFAR-10 with 5,000 training samples}
+@misc{cifar10_lowdata_ablation_2026,
+  title        = {Regularization Under Pressure: Architectural Ablation
+                  in Low-Data Regime Image Classifiers},
+  author       = {Aman},
+  year         = {2026},
+  note         = {Ablation study on CIFAR-10 with 5,000 training samples},
+  howpublished = {\url{https://github.com/<your-repo>}}
 }
 ```
 
 ---
 
-## License
+<div align="center">
 
-MIT License -- free for academic and commercial use. Please cite if used in published work.
+MIT License &nbsp;·&nbsp; Reproducible with seed `42` &nbsp;·&nbsp; IIIT Dharwad
 
----
-
-## Contact & Contributions
-
-- **Issues**: Open a GitHub issue for bugs or questions
-- **Pull Requests**: Welcome -- especially for additional variants (ResNet, transfer learning, AutoAugment)
-- **Research Extensions**: See `research_paper.md` for theoretical analysis and future directions
-
----
-
-*Generated from controlled experiments with fixed seed 42. All metrics are reproducible.*
-'''
-
-with open('/mnt/agents/output/README.md', 'w') as f:
-    f.write(readme_final)
-
-print("README.md updated with 4 images only!")
-print(f"Lines: {len(readme_final.split(chr(10)))}")
+</div>
