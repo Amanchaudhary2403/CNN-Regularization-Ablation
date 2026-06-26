@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>⚡ ZERO-SHOT CAPACITY</h1>
+<h1>CNN Regularization Ablation Study</h1>
 <h3>How much can a CNN learn from 5,000 images — and when does regularization start killing it?</h3>
 
 <br>
@@ -47,8 +47,6 @@ We trained **6 controlled CNN variants** on just 5,000 CIFAR-10 images (10% of t
 ## ⚙️ Experimental Protocol
 
 ### Data Splits
-
-No leakage. No exceptions.
 
 ```
 CIFAR-10 Train Split (50,000)          CIFAR-10 Test Split (10,000)
@@ -278,20 +276,23 @@ Six-panel loss grid. M1 shows classic train-loss descent with flat val-loss — 
 ## 📁 Repository Structure
 
 ```
-cifar10-lowdata-ablation/
+CNN-Regularization-Ablation/
 │
-├── Config.py              # All hyperparameters in one place
-├── data.py                # Strict CIFAR-10 split loading (no leakage)
-├── models.py              # 6 model variants, modular regularization toggles
-├── experiments.py         # Training orchestration + 5 standard plots
-├── plots.py               # 4 additional publication-quality figures
-├── research_paper.md      # Full theoretical analysis
+├── Project/
+│   ├── Config.py          # All hyperparameters in one place
+│   ├── data.py            # Strict CIFAR-10 split loading (no leakage)
+│   ├── models.py          # 6 model variants, modular regularization toggles
+│   └── experiments.py     # Training orchestration + 5 standard plots
 │
-└── results/
-    ├── results.json       # All numerical metrics
-    ├── figures/           # Auto-generated plots
-    └── *.weights.h5       # Saved checkpoints per variant
+├── Results/
+│   ├── results.json       # All numerical metrics
+│   ├── figures/           # Auto-generated plots
+│   └── *.weights.h5       # Saved checkpoints per variant
+│
+└── research_paper.md      # Full theoretical analysis
 ```
+
+---
 
 ## 📄 Citation
 
